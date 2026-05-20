@@ -1,0 +1,297 @@
+--1
+SELECT pid, pname, pcity 
+FROM Passenger;
+
+--2
+SELECT pname, pcity
+FROM Passenger
+WHERE pgender = '남';
+
+--3
+SELECT fid, fdate, dest
+FROM Flight
+WHERE src = '김포';
+
+-- 4
+SELECT pid, COUNT(*)
+FROM Booking
+GROUP BY pid;
+
+-- 5
+SELECT aid, aname, acity
+FROM Agency;
+
+-- 6
+SELECT COUNT(*)
+FROM Flight
+WHERE dest = '제주';
+
+-- 7
+SELECT pid, aid, fid
+FROM Booking
+WHERE fdate > TO_DATE('2025-01-01', 'YYYY-MM-DD');
+
+-- 8
+SELECT aid, COUNT(*)
+FROM Booking
+GROUP BY aid
+ORDER BY COUNT(*) DESC;
+
+-- 9
+SELECT fid, src, dest
+FROM Flight
+WHERE fdate = (SELECT MAX(fdate) FROM Flight);
+
+-- 10
+SELECT pname
+FROM Passenger
+WHERE pcity IN ('서울시 강남구', '서울시 강동구');
+
+-- 11
+SELECT p.pname, b.fid
+FROM Passenger p, Booking b
+WHERE p.pid = b.pid;
+
+-- 12
+SELECT a.aname, COUNT(*)
+FROM Agency a, Booking b
+WHERE a.aid = b.aid
+GROUP BY a.aname;
+
+-- 13
+SELECT p.pname, f.src, f.dest
+FROM Passenger p, Booking b, Flight f
+WHERE p.pid = b.pid 
+  AND f.fid = b.fid;
+
+-- 14
+SELECT DISTINCT p.pname, a.aname
+FROM Passenger p, Booking b, Agency a
+WHERE p.pid = b.pid 
+  AND a.aid = b.aid;
+
+-- 15
+SELECT p.pname
+FROM Passenger p LEFT OUTER JOIN Booking b ON p.pid = b.pid
+WHERE b.pid IS NULL;
+
+-- 16
+SELECT f.dest, COUNT(*)
+FROM Flight f, Booking b
+WHERE f.fid = b.fid
+  AND f.fdate >= TO_DATE('2025-01-01', 'YYYY-MM-DD')
+GROUP BY f.dest;
+
+-- 17
+SELECT DISTINCT p.pname
+FROM Passenger p, Booking b, Flight f
+WHERE p.pid = b.pid
+  AND f.fid = b.fid
+  AND f.dest = '제주';
+
+-- 18
+SELECT DISTINCT p.pname
+FROM Passenger p, Booking b, Agency a
+WHERE p.pid = b.pid
+  AND a.aid = b.aid
+  AND a.aname = '마당여행사';
+
+-- 19
+SELECT p.pname, a.aname, f.src, f.dest
+FROM Passenger p, Booking b, Flight f, Agency a
+WHERE p.pid = b.pid
+  AND f.fid = b.fid
+  AND a.aid = b.aid
+  AND b.fdate >= TO_DATE('2025-01-01', 'YYYY-MM-DD')
+  AND b.fdate <= TO_DATE('2025-12-31', 'YYYY-MM-DD');
+
+-- 20
+SELECT f.fid, f.src, f.dest
+FROM Flight f LEFT OUTER JOIN Booking b ON f.fid = b.fid
+WHERE b.fid IS NULL;
+
+-- 21
+SELECT pname
+FROM Passenger
+WHERE pid IN (SELECT pid FROM Booking);
+
+-- 22
+SELECT pname
+FROM Passenger
+WHERE pid IN (
+    SELECT pid 
+    FROM Booking 
+    WHERE fid IN (SELECT fid FROM Flight WHERE fdate >= TO_DATE('2025-01-01', 'YYYY-MM-DD'))
+);
+
+-- 23
+SELECT aname
+FROM Agency
+WHERE aid IN (
+    SELECT aid 
+    FROM Booking 
+    GROUP BY aid 
+    HAVING COUNT(*) >= 3
+);
+
+-- 24
+SELECT fid, src, dest
+FROM Flight
+WHERE fid NOT IN (SELECT DISTINCT fid FROM Booking);
+
+-- 25
+SELECT pname
+FROM Passenger
+WHERE pid = (
+    SELECT pid 
+    FROM (
+        SELECT pid 
+        FROM Booking 
+        GROUP BY pid 
+        ORDER BY COUNT(*) DESC
+    ) 
+    WHERE ROWNUM = 1
+);
+
+-- 26
+SELECT pname
+FROM Passenger
+WHERE pid IN (
+    SELECT pid 
+    FROM Booking 
+    WHERE fid IN (SELECT fid FROM Flight WHERE dest = '부산')
+);
+
+-- 27
+SELECT aname
+FROM Agency
+WHERE aid NOT IN (SELECT DISTINCT aid FROM Booking);
+
+-- 28
+SELECT pname
+FROM Passenger
+WHERE pid IN (SELECT pid FROM Booking WHERE aid = 1);
+
+-- 29
+SELECT pid
+FROM Booking
+GROUP BY pid
+HAVING COUNT(*) > (
+    SELECT AVG(COUNT(*)) 
+    FROM Booking 
+    GROUP BY pid
+);
+
+-- 30
+SELECT pname
+FROM Passenger
+WHERE pid IN (
+    SELECT pid 
+    FROM Booking 
+    WHERE fdate >= TO_DATE('2024-01-01', 'YYYY-MM-DD')
+      AND fdate <= TO_DATE('2024-12-31', 'YYYY-MM-DD');
+);
+
+-- 31
+SELECT p.pname
+FROM Passenger p
+WHERE EXISTS (
+    SELECT 1
+    FROM Booking b
+    WHERE b.pid = p.pid
+);
+
+-- 32
+SELECT p.pname
+FROM Passenger p
+WHERE (
+    SELECT COUNT(*)
+    FROM Booking b
+    WHERE b.pid = p.pid
+) >= 2;
+
+-- 33
+SELECT f.fid
+FROM Flight f
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Booking b
+    WHERE b.fid = f.fid
+);
+
+-- 34
+SELECT p.pname
+FROM Passenger p
+WHERE EXISTS (
+    SELECT 1
+    FROM Booking b
+    WHERE b.pid = p.pid
+      AND b.fid IN (SELECT fid FROM Flight WHERE fdate >= TO_DATE('2025-01-01', 'YYYY-MM-DD'))
+);
+
+-- 35
+SELECT p.pname
+FROM Passenger p
+WHERE p.pid IN (
+    SELECT pid
+    FROM Booking
+    GROUP BY pid
+    HAVING COUNT(DISTINCT aid) >= 2
+);
+
+-- 36
+SELECT a.aname
+FROM Agency a
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Booking b
+    WHERE b.aid = a.aid
+);
+
+-- 37
+SELECT p.pname
+FROM Passenger p
+WHERE p.pid IN (
+    SELECT b.pid
+    FROM Booking b, Flight f
+    WHERE b.fid = f.fid
+      AND f.dest = '제주'
+);
+
+-- 38
+SELECT p.pname
+FROM Passenger p
+WHERE p.pid IN (
+    SELECT pid FROM Booking WHERE fdate >= TO_DATE('2024-01-01', 'YYYY-MM-DD') AND fdate <= TO_DATE('2024-12-31', 'YYYY-MM-DD')
+    MINUS
+    SELECT pid FROM Booking WHERE fdate >= TO_DATE('2025-01-01', 'YYYY-MM-DD') AND fdate <= TO_DATE('2025-12-31', 'YYYY-MM-DD')
+);
+
+-- 39
+SELECT f1.fid
+FROM (
+    SELECT b.fid, f.dest, COUNT(*) as cnt
+    FROM Booking b, Flight f
+    WHERE b.fid = f.fid
+    GROUP BY b.fid, f.dest
+) f1
+WHERE f1.cnt = (
+    SELECT MAX(COUNT(*))
+    FROM Booking b2, Flight f2
+    WHERE b2.fid = f2.fid
+      AND f2.dest = f1.dest
+    GROUP BY b2.fid
+);
+
+-- 40
+SELECT p.pname
+FROM Passenger p
+WHERE EXISTS (
+    SELECT 1 FROM Booking WHERE pid = p.pid
+) AND NOT EXISTS (
+    SELECT 1
+    FROM Booking b, Flight f
+    WHERE b.pid = p.pid
+      AND b.fid = f.fid
+      AND f.src <> '김포'
+);
